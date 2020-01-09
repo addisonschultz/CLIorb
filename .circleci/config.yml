@@ -27,6 +27,9 @@ jobs:
       color-token-path:
         type: string
         default: ""
+      icon-path:
+        type: string
+        default: ""
 
     steps:
       - add_ssh_keys:
