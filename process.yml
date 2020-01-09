@@ -1,0 +1,183 @@
+version: 2
+jobs:
+  build:
+    docker:
+    - image: circleci/node:10
+    working_directory: ~/repo
+    steps:
+    - checkout
+    - run:
+        command: yarn
+    - run:
+        command: npx framer-cli build ./
+workflows:
+  version: 2
+  workflow:
+    jobs:
+    - build
+
+# Original config.yml file:
+# # Javascript Node CircleCI 2.1 configuration file
+# #
+# # Usage intended for automating design system management in Framer X
+# #
+# version: 2.1
+# 
+# jobs:
+#   component-import:
+#     docker:
+#       - image: circleci/node:10
+# 
+#     working_directory: ~/repo
+# 
+#     parameters:
+#       component-library-package:
+#         type: string
+#         default: \"\"
+#       dependant-libraries:
+#         type: string
+#         default: \"\"
+#       framer-project-path:
+#         type: string
+#         default: \"./\"
+#       color-token-path:
+#         type: string
+#         default: \"\"
+# 
+#     steps:
+#       - add_ssh_keys:
+#           fingerprints:
+#             - \"${CI_GIT_USER_KEY_FINGERPRINT}\"
+#       - checkout
+# 
+#       - run:
+#           command: |
+#             # Download archive of hub release
+#             curl -OL https://github.com/github/hub/releases/download/v2.13.0/hub-linux-amd64-2.13.0.tgz
+# 
+#             # Decompress archive            
+#             tar -zvxf hub-linux-amd64-2.13.0.tgz hub-linux-amd64-2.13.0/bin/hub
+# 
+#             # Move to location in user's PATH
+#             sudo mv hub-linux-amd64-2.13.0/bin/hub /usr/local/bin/hub
+# 
+#             # Clean up archive and artifacts
+#             rm -f hub-linux-amd64-2.13.0.tgz
+#             rm -rf hub-linux-amd64-2.13.0
+# 
+#       - run:
+#           command: |
+#             COMPONENT_IMPORTER_BRANCH_NAME=\"framer-bridge/component-importer\"
+#             branchAlreadyExists=false
+# 
+#             # cd to Framer project directory
+#             cd << parameters.framer-project-path >>
+# 
+#             # Store current yarn.lock in memory
+#             previousYarnLock=$(cat yarn.lock)
+# 
+#             # Install dependencies
+#             yarn
+# 
+#             # Store new yarn.lock in memory
+#             newYarnLock=$(cat yarn.lock)
+# 
+#             # Check if the branch already exists
+#             if [ $(git branch -r | grep $COMPONENT_IMPORTER_BRANCH_NAME) ]; then
+#               echo \"Component Importer Branch already exists, checking out\"
+#               hub checkout $COMPONENT_IMPORTER_BRANCH_NAME
+#               branchAlreadyExists=true
+#             else
+#               echo \"Component Importer Branch does not yet exist, creating new one\"
+#               # Checkout a new branch
+#               hub checkout -b $COMPONENT_IMPORTER_BRANCH_NAME
+#             fi
+# 
+#             # Check if a component importer configuration already exists
+#             if [ ! -f importer.config.json ]; then
+#               # Run component importer for the first time
+#               npx @framerjs/component-importer@next init << parameters.component-library-package >> --mode plain
+# 
+#               if [ << parameters.color-token-path >> ]; then
+#                 # Add color importer dependency
+#                 yarn global add https://github.com/tisho/framer-shared-colors-cli.git
+# 
+#                 # Run color importer for the first time
+#                 framer-shared-colors replace << parameters.color-token-path >> << parameters.framer-project-path >>/design/document.json
+#               fi
+#             else
+#               # Determine if there is dependency updates
+#               updatedDependencies=$(npx yarn-pkg-version-diff << parameters.dependant-libraries >> $previousYarnLock $newYarnLock)
+# 
+#               # Check if response of dependency updates script is empty
+#               if [ -z \"$updatedDependencies\" ]; then
+#                 # Regenerate components
+#                 npx @framerjs/component-importer@next generate
+# 
+#                 if [ << parameters.color-token-path >> ]; then
+#                   # Add color importer dependency
+#                   yarn global add https://github.com/tisho/framer-shared-colors-cli.git
+#                 
+#                   # Rerun shared colors importer to merge new colors
+#                   framer-shared-colors merge << parameters.color-token-path >> << parameters.framer-project-path >>/design/document.json
+#                 fi 
+#               fi
+#             fi
+# 
+#             # Check if components were imported and there were changes
+#             if [ ! -z \"$(git status --porcelain)\" ]; then
+#               echo \"Components imported, committing to git\"
+# 
+#               # @TODO - optionally set user.email/user.name based on environment variables
+#               hub config --global user.email \"component-importer@framer.com\"
+#               hub config --global user.name \"Framer Bridge Component Importer\"
+# 
+#               # Stage all files for commit
+#               hub add .
+# 
+#               # Commit imported components
+#               # @TODO - Add more descriptive commit message
+#               hub commit -m \"Re-imported components due to dependency update [skip ci]\"
+# 
+#               # Push to git
+#               hub push origin HEAD
+# 
+#               # Create pull request if branch didn't already exist (PR will have been created if branch does exist)
+#               if [ \"$branchAlreadyExists\" = false ]; then
+#                 # @TODO - Add more descriptive PR message
+#                 hub pull-request -m $COMPONENT_IMPORTER_BRANCH_NAME -p
+#               fi
+#             fi
+# 
+#   # Framer CLI build command
+#   build:
+#     docker:
+#       - image: circleci/node:10
+# 
+#     working_directory: ~/repo
+# 
+#     parameters:
+#       framer-project-path:
+#         type: string
+#         default: \"./\"
+# 
+#     steps:
+#       - checkout
+#       - run: yarn
+#       - run: npx framer-cli build << parameters.framer-project-path >>
+# 
+#   publish:
+#     docker:
+#       - image: circleci/node:10
+# 
+#     working_directory: ~/repo
+# 
+#     parameters:
+#       framer-project-path:
+#         type: string
+#         default: \"./\"
+# 
+#     steps:
+#       - checkout
+#       - run: yarn
+#       - run: npx framer-cli publish << parameters.framer-project-path >> --yes

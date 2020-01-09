@@ -1,0 +1,19 @@
+# Javascript Node CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-javascript/ for more details
+#
+version: 2.1
+
+jobs:
+  say-goodbye:
+    description: "who to say goodbye to"
+    parameters:
+      who:
+        type: string
+        default: world
+    steps:
+      - run: echo goodbye << parameters.who >>
+    docker:
+      - image: circleci/node:10
+
+    working_directory: ~/repo

@@ -1,0 +1,21 @@
+{
+  "name": "framer-bridge-orb",
+  "version": "1.0.0",
+  "description": "This is a project to test shipping orbs under cli-orb/framer",
+  "main": "index.js",
+  "scripts": {
+    "validate": "cd .circleci && circleci orb validate ./config.yml",
+    "execute": "circleci config process .circleci/config.yml > process.yml && circleci local execute -c process.yml --job build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/addisonschultz/CLIorb.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/addisonschultz/CLIorb/issues"
+  },
+  "homepage": "https://github.com/addisonschultz/CLIorb#readme"
+}
